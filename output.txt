@@ -1,0 +1,5 @@
+Thread-0 (pc) arrived
+Connection: Thread-0 Occupied
+Connection: c1 login
+Connection: c1 performs online activity
+Connection: c1 Logged out
