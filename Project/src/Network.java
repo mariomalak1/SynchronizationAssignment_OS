@@ -1,31 +1,39 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.Semaphore;
 
 public class Network {
-    public static void main(String[] args) {
+    private int N;
+    private  int Tc;
+    private List<Device> TcLines = new ArrayList<Device>(Tc);
+    Router router= new Router(Tc);
+    Network( int N,int Tc,List<Device> TcLines,Router router ){
+        this.N = N;
+        this.Tc =Tc;
+        this.TcLines =TcLines;
+        this.router =router;
+    }
+    public void link() throws InterruptedException {
 
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("What is the number of WI-FI Connections?");
-        int maxConnections = scanner.nextInt();
-        System.out.println("What is the number of devices Clients want to connect?");
-        int totalDevices = scanner.nextInt();
+            for (int i = 0; i <Tc; i++) {
+                TcLines.get(i).start();
+            }
+        for (int i = 0; i <N; i++) {
+            router.occupyConnection(TcLines.get(i));
+            router.addDeviceToList(TcLines.get(i));
+            router.releaseConnection(TcLines.get(i));
 
-        List<Device> allDevices = new ArrayList<Device>(totalDevices);
-        Router router = new Router(maxConnections);
 
-//         Loop to input devices' information
-        for (int i = 0; i < totalDevices; i++) {
-            System.out.println("Enter device name and type (e.g., C1 mobile):");
-            String name = scanner.next();
-            String type = scanner.next();
-            Device device = new Device(name, type);
-            allDevices.add(device);
         }
 
-//
-//        Here's the logic of the network
-//
+
 
     }
-}
+
+
+
+
+
+
+    }

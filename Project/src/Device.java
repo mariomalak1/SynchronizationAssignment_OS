@@ -3,6 +3,8 @@ public class Device extends Thread{
     String type;
 
     public Device(String name, String type) {
+        this.name = name;
+        this.type = type;
     }
 
     public void set_name(String name){
@@ -17,8 +19,11 @@ public class Device extends Thread{
         connect();
         perform();
         disconnect();
+
     }
     public void connect(){
+
+
         System.out.println(name + " login");
     }
     public void disconnect(){
