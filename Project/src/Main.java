@@ -2,8 +2,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-
-
 public class Main {
     public static void main(String[] args) throws InterruptedException {
 
@@ -13,7 +11,7 @@ public class Main {
         System.out.println("What is the number of devices Clients want to connect?");
         int totalDevices = scanner.nextInt();
 
-        List<Device> allDevices = new ArrayList<Device>(totalDevices);
+        List<Device> allDevices = new ArrayList<>(totalDevices);
         Router router = new Router(maxConnections);
 
 //         Loop to input devices' information
@@ -22,9 +20,10 @@ public class Main {
             String name = scanner.next();
             String type = scanner.next();
             Device device = new Device(name, type);
+            System.out.println("from first : " + name + " " + type);
             allDevices.add(device);
         }
-        Network n =new Network(maxConnections,totalDevices,allDevices,router);
+        Network n = new Network(maxConnections, totalDevices, allDevices, router);
         n.link();
     }
 

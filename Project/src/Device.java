@@ -22,8 +22,6 @@ public class Device extends Thread{
 
     }
     public void connect(){
-
-
         System.out.println(name + " login");
     }
     public void disconnect(){
@@ -32,5 +30,4 @@ public class Device extends Thread{
     public void perform(){
         System.out.println(name + " perform online activity");
     }
-
 }

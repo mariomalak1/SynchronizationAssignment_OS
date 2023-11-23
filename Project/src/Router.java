@@ -15,11 +15,7 @@ class Router {
 
     //    Adds a device to the list of connected devices
     public void addDeviceToList(Device device){
-
         connectedDevices.add(device);
-
-
-
     }
     public  int size(){
         return connectedDevices.size();
@@ -28,19 +24,14 @@ class Router {
 
     //    Acquires a connection for a device
     public void occupyConnection(Device device){
-
         semaphore.acquire(device); // Try to acquire a permit
-
         // If the thread reaches this point, it has successfully acquired a permit
-
     }
 
     //    Releases a connection for a device
     public void releaseConnection(Device device) {
         connectedDevices.remove(device);
         semaphore.release();
-
-
     }
 
     private void printStatus(String message) {
