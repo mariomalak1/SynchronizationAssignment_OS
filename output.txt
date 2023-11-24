@@ -1,5 +1,18 @@
-Thread-0 (pc) arrived
-Connection: Thread-0 Occupied
-Connection: c1 login
-Connection: c1 performs online activity
-Connection: c1 Logged out
+(c1)(c) arrived
+(c2)(c) arrived
+Connection 2: c2 Occupied
+Connection 1: c1 Occupied
+Connection 2: c2 login
+Connection 2: c2 performs online activity
+Connection 1: c1 login
+Connection 1: c1 performs online activity
+Connection 1: c1 Logged out
+(c4)(c) arrived
+c4(c) arrived and waiting
+Connection 2: c2 Logged out
+(c3)(c) arrived
+c3(c) arrived and waiting
+c4(c) arrived and waiting
+Connection 0: c4 Logged out
+c3(c) arrived and waiting
+Connection 0: c3 Logged out
