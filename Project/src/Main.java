@@ -6,87 +6,65 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-class Router {
-    private final CustomeSemaphore semaphore;
-    private final List<Device> connections;
-    private int maxCon;
-    private int connectionNumber = 1; // initialize connection number
-    private BufferedWriter bufferedWriter;
+import static java.lang.Thread.sleep;
 
+class Router {
+    public CustomeSemaphore semaphore;
+    public boolean[] connections; // Array to track the status of each connection
+    private int maxCon; // Maximum number of connections allowed
+    private BufferedWriter bufferedWriter; // BufferedWriter to write to the output file
+
+    // Constructor for the Router class
     public Router(int maxConnections) {
-        semaphore = new CustomeSemaphore(maxConnections);
-        connections = new ArrayList<>(maxConnections);
-        maxCon = maxConnections;
+        this.semaphore = new CustomeSemaphore(maxConnections);
+        this.connections = new boolean[maxConnections]; // Initialize connection status array
+        this.maxCon = maxConnections;
 
         try {
             File file = new File("output.txt");
             FileWriter fileWriter = new FileWriter(file);
-            bufferedWriter = new BufferedWriter(fileWriter);
+            this.bufferedWriter = new BufferedWriter(fileWriter);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void writeToFile(String message) {
-        try {
-            bufferedWriter.write(message);
-            bufferedWriter.newLine();
-            bufferedWriter.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void connect(Device device) {
-        try {
-            semaphore.acquire();
-            connections.add(device);
-            writeToFile("(" + device.get_Name() + ")(" + device.getType() + ") arrived");
-            occupyConnection(device);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void disconnect(Device device, int conNum) {
-        writeToFile("Connection " + conNum + ": " + device.get_Name() + " Logged out");
-        releaseConnection(device);
-        semaphore.release();
-        handleWaitingDevices();
-    }
-
-    private void occupyConnection(Device device) {
-        if (connectionNumber <= maxCon) {
-            int occupiedConnectionNumber = connectionNumber++;
-            writeToFile("Connection " + occupiedConnectionNumber + ": " + device.get_Name() + " Occupied");
-            device.setConnectionNumber(occupiedConnectionNumber);
-            device.performOnlineActivity();
-        } else {
-            writeToFile(device.get_Name() + "(" + device.getType() + ") arrived and waiting");
-        }
-    }
-
-    private void handleWaitingDevices() {
-        List<Device> waitingDevices = new ArrayList<>(connections);
-        for (Device device : waitingDevices) {
-            if (device.isWaiting()) {
-                occupyConnection(device);
+    // Method to connect a device to the router
+    public synchronized int connect(Device device) throws InterruptedException {
+        for (int i = 0; i < maxCon; i++) {
+            if (!connections[i]) { // Check if the connection is available
+                device.setConnectionNumber(i + 1); // Assign the connection number to the device
+                connections[i] = true; // Mark the connection as occupied
+                sleep(100);
                 break;
             }
         }
+        return device.getConnectionNumber(); // Return the connection number assigned to the device
     }
 
-    private void releaseConnection(Device device) {
-        connections.remove(device);
+    // Method to disconnect a device from the router
+    public synchronized void disconnect(Device device) {
+        writeToFile("Connection " + device.getConnectionNumber() + ": " + device.get_Name() + " Logged out");
+        System.out.println("Connection " + device.getConnectionNumber() + ": " + device.get_Name() + " Logged out");
+        connections[device.getConnectionNumber() - 1] = false; // Mark the connection as available
+        notify(); // Notify waiting threads that a connection is available
     }
 
-    public int getConnectionNum() {
-        return connectionNumber;
+    // Method to write messages to the output file
+    public void writeToFile(String message) {
+        try {
+            this.bufferedWriter.write(message);
+            this.bufferedWriter.newLine();
+            this.bufferedWriter.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
+    // Method to close the output file
     public void closeFile() {
         try {
-            bufferedWriter.close();
+            this.bufferedWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -94,75 +72,99 @@ class Router {
 }
 
 class Device extends Thread {
-    private final Router router;
+    public final Router router;
     private final String deviceName;
     private final String deviceType;
     private int connectionNumber;
-    private boolean isWaiting = true;
 
-    public String get_Name() {
-        return deviceName;
-    }
-
-    public String getType() {
-        return deviceType;
-    }
-
+    // Constructor for the Device class
     public Device(Router router, String deviceName, String deviceType) {
         this.router = router;
         this.deviceName = deviceName;
         this.deviceType = deviceType;
+        connectionNumber = 1;
     }
 
+    // Run method for the Device thread
     @Override
     public void run() {
-        router.connect(this);
-        // Simulate online activity
         try {
-            sleep((long) (Math.random() * 1000));
+            router.semaphore.acquire(this, router); // Acquire a permit from the semaphore
+            connectionNumber = router.connect(this); // Connect to the router and get the connection number
+            router.writeToFile("Connection " + connectionNumber + ": " + deviceName + " Occupied");
+            System.out.println("Connection " + connectionNumber + ": " + deviceName + " Occupied");
+            performOnlineActivity();
+            router.disconnect(this); // Disconnect from the router
+            router.semaphore.release(); // Release the permit to the semaphore
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        router.disconnect(this, connectionNumber);
     }
 
-    public void performOnlineActivity() {
-        router.writeToFile("Connection " + connectionNumber + ": " + deviceName + " login");
-        router.writeToFile("Connection " + connectionNumber + ": " + deviceName + " performs online activity");
-        isWaiting = false;
+    // Method representing online activity performed by the device
+    public void performOnlineActivity() throws InterruptedException {
+        router.writeToFile("Connection " + connectionNumber + ": " + deviceType + " login");
+        router.writeToFile("Connection " + connectionNumber + ": " + deviceType + " Performs online activity");
+        System.out.println("Connection " + connectionNumber + ": " + deviceType + " login");
+        System.out.println("Connection " + connectionNumber + ": " + deviceType + " Performs online activity");
+        sleep(2000);
     }
 
+    // Getter method to retrieve the device name
+    public String get_Name() {
+        return deviceName;
+    }
+
+    // Getter method to retrieve the device type
+    public String getType() {
+        return deviceType;
+    }
+
+    // Setter method to set the connection number
     public void setConnectionNumber(int connectionNumber) {
         this.connectionNumber = connectionNumber;
     }
 
-    public boolean isWaiting() {
-        return isWaiting;
+    // Getter method to retrieve the connection number
+    public int getConnectionNumber() {
+        return connectionNumber;
     }
 }
 
 class CustomeSemaphore {
     private int permits;
 
+    // Constructor for the CustomeSemaphore class
     public CustomeSemaphore(int initialPermits) {
         this.permits = initialPermits;
     }
 
-    public synchronized void acquire() throws InterruptedException {
-        while (permits == 0) {
-            wait();
-        }
+    // Method to acquire permits from the semaphore
+    public synchronized void acquire(Device device, Router router) throws InterruptedException {
         permits--;
+        if (permits < 0) {
+            router.writeToFile(device.get_Name() + " (" + device.getType() + ")" + " arrived and waiting");
+            System.out.println(device.get_Name() + " (" + device.getType() + ")" + " arrived and waiting");
+            wait(); // Wait until a permit is available
+        } else {
+            router.writeToFile(device.get_Name() + " (" + device.getType() + ")" + " arrived");
+            System.out.println(device.get_Name() + " (" + device.getType() + ")" + " arrived");
+        }
+
+        device.router.connect(device); // Connect to the router
     }
 
+    // Method to release permits to the semaphore
     public synchronized void release() {
         permits++;
-        notify();
+        if (permits <= 0) {
+            notify(); // Notify waiting threads that a permit is available
+        }
     }
 }
 
 class Network {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         // Get input values
         Scanner scanner = new Scanner(System.in);
 
@@ -175,7 +177,7 @@ class Network {
         Router router = new Router(maxConnections);
         List<Device> allDevices = new ArrayList<>();
 
-//         Loop to input devices' information
+        // Loop to input devices' information
         for (int i = 0; i < totalDevices; i++) {
             System.out.println("Enter device name and type (e.g., C1 mobile):");
             String name = scanner.next();
@@ -184,17 +186,15 @@ class Network {
             allDevices.add(device);
         }
 
-        for (Device device : allDevices){
+        // Let all devices start connecting to the router
+        for (Device device : allDevices) {
+            sleep(100);
             device.start();
         }
 
-        // Wait for all devices to finish
+        // Wait for all devices to finish before closing the file
         for (Device device : allDevices) {
-            try {
-                device.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            device.join();
         }
 
         // Close the file after all devices finish
