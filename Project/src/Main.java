@@ -9,14 +9,14 @@ import java.util.Scanner;
 import static java.lang.Thread.sleep;
 
 class Router {
-    public CustomeSemaphore semaphore;
+    public CustomerSemaphore semaphore;
     public boolean[] connections; // Array to track the status of each connection
     private int maxCon; // Maximum number of connections allowed
     private BufferedWriter bufferedWriter; // BufferedWriter to write to the output file
 
     // Constructor for the Router class
     public Router(int maxConnections) {
-        this.semaphore = new CustomeSemaphore(maxConnections);
+        this.semaphore = new CustomerSemaphore(maxConnections);
         this.connections = new boolean[maxConnections]; // Initialize connection status array
         this.maxCon = maxConnections;
 
@@ -131,11 +131,11 @@ class Device extends Thread {
     }
 }
 
-class CustomeSemaphore {
+class CustomerSemaphore {
     private int permits;
 
-    // Constructor for the CustomeSemaphore class
-    public CustomeSemaphore(int initialPermits) {
+    // Constructor for the CustomerSemaphore class
+    public CustomerSemaphore(int initialPermits) {
         this.permits = initialPermits;
     }
 

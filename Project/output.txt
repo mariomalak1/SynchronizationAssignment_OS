@@ -1,0 +1,15 @@
+c1 (mobile) arrived
+c2 (tablet) arrived
+c3 (ipad) arrived and waiting
+Connection 1: c2 Occupied
+Connection 1: tablet login
+Connection 1: tablet Performs online activityConnection 2: c1 Occupied
+
+Connection 2: mobile login
+Connection 2: mobile Performs online activity
+Connection 2: c1 Logged out
+Connection 1: c2 Logged outConnection 2: c3 Occupied
+
+Connection 2: ipad login
+Connection 2: ipad Performs online activity
+Connection 2: c3 Logged out
